@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pocket Rumble（ポケットランブル） - 図鑑 / Encyclopedia (Monsters & Skills)</title>
+  <style>
+    :root {
+      --bg-dark: #0f0518;
+      --card-bg: rgba(27, 12, 42, 0.65);
+      --accent: #8833cc;
+      --accent-glow: rgba(136, 51, 204, 0.4);
+      --text: #e0d5eb;
+      --text-muted: #a992c4;
+      --cyan: #00ffff;
+      --gold: #ffcc00;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at top, #220d3a 0%, #0d0418 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 30px auto;
+      text-align: center;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      text-shadow: 0 0 10px #cc33ff, 0 0 20px var(--accent), 0 0 40px var(--cyan);
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--cyan);
+      text-shadow: 0 0 5px var(--cyan);
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .tab-btn {
+      background: rgba(136, 51, 204, 0.2);
+      border: 2px solid var(--accent);
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-glow);
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: rgba(0, 255, 255, 0.3);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px var(--cyan);
+      transform: scale(1.05);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .control-panel {
+      background: var(--card-bg);
+      border: 1px solid rgba(136, 51, 204, 0.3);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: rgba(18, 9, 32, 0.8);
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(136, 51, 204, 0.2);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--cyan);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 2px solid rgba(136, 51, 204, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cyan);
+      box-shadow: 0 8px 25px var(--accent-glow);
+    }
+
+    .rarity-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-bottom: 1px solid rgba(136, 51, 204, 0.2);
+      padding-bottom: 12px;
+    }
+
+    .monster-avatar-frame {
+      width: 60px;
+      height: 60px;
+      background: rgba(18, 9, 32, 0.8);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .monster-avatar {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+    }
+
+    .monster-name-area {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .monster-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .element-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .stats-table td {
+      padding: 4px 0;
+    }
+
+    .stats-table td:nth-child(even) {
+      text-align: right;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .stat-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .stat-bar {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .skills-area {
+      border-top: 1px solid rgba(136, 51, 204, 0.2);
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .skills-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    .skill-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border-left: 2px solid var(--accent);
+    }
+
+    /* Skill Item styles */
+    .skill-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(136, 51, 204, 0.3);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .skill-card:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .skill-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+
+    .skill-name {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .skill-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .skill-desc {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #dfd0f0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>POCKET RUMBLE</h1>
+    <div class="subtitle">ポケットランブル 公式ライブラリ＆図鑑 / Official Library &amp; Encyclopedia ・ <a href="index.html" style="color:#00ffff;">サポート / Support</a></div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-monsters-btn">🐉 モンスター図鑑 / Monsters (<span id="monsters-count">0</span>)</button>
+      <button class="tab-btn" id="tab-skills-btn">🪄 スキル一覧 / Skills (<span id="skills-count">0</span>)</button>
+      <button class="tab-btn" id="tab-heroes-btn">🛡️ ヒーロー図鑑 / Heroes (<span id="heroes-count">0</span>)</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Monsters Tab Pane -->
+    <div id="tab-monsters-pane">
+      <div class="control-panel">
+        <div class="search-box">
+          <input type="text" id="monster-search" placeholder="モンスター名や属性で検索 / Search monsters...">
+        </div>
+        <div class="filter-group" id="monster-rarity-filters">
+          <span style="font-size: 11px; color: var(--text-muted);">レアリティ / Rarity:</span>
+          <button class="filter-btn active" data-val="ALL">全て / All</button>
+          <button class="filter-btn" data-val="COMMON">コモン / Common</button>
+          <button class="filter-btn" data-val="UNCOMMON">アンコモン / Uncommon</button>
+          <button class="filter-btn" data-val="RARE">レア / Rare</button>
+          <button class="filter-btn" data-val="EPIC">エピック / Epic</button>
+          <button class="filter-btn" data-val="LEGENDARY">レジェンダリー / Legendary</button>
+        </div>
+        <div class="filter-group" id="monster-element-filters">
+          <span style="font-size: 11px; color: var(--text-muted);">属性 / Element:</span>
+          <button class="filter-btn active" data-val="ALL">全て / All</button>
+          <button class="filter-btn" data-val="fire">🔥 火 / Fire</button>
+          <button class="filter-btn" data-val="water">❄️ 水 / Water</button>
+          <button class="filter-btn" data-val="wind">⚡ 風 / Wind</button>
+          <button class="filter-btn" data-val="earth">⛰️ 地 / Earth</button>
+          <button class="filter-btn" data-val="light">✨ 光 / Light</button>
+          <button class="filter-btn" data-val="dark">🔮 闇 / Dark</button>
+          <button class="filter-btn" data-val="physical">⚔️ 物理 / Physical</button>
+        </div>
+      </div>
+
+      <!-- Monster Stats Summary Table -->
+      <div id="monster-stats-table-container" style="background: var(--card-bg); border: 1px solid rgba(136, 51, 204, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; overflow-x: auto; max-height: 350px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
+        <h3 style="margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid rgba(136, 51, 204, 0.2); padding-bottom: 8px; color: var(--cyan); text-shadow: 0 0 5px var(--cyan);">🐉 モンスター基本ステータス一覧 / Monster Base Stats</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid rgba(136, 51, 204, 0.5); color: var(--text-muted);">
+              <th style="padding: 6px 4px;">名前 / Name</th>
+              <th style="padding: 6px 4px;">レア度 / Rarity</th>
+              <th style="padding: 6px 4px;">属性 / Element</th>
+              <th style="padding: 6px 4px; text-align: right;">HP</th>
+              <th style="padding: 6px 4px; text-align: right;">ATK</th>
+              <th style="padding: 6px 4px; text-align: right;">DEF</th>
+              <th style="padding: 6px 4px; text-align: right;">SPD</th>
+              <th style="padding: 6px 4px; text-align: right;">INT</th>
+            </tr>
+          </thead>
+          <tbody id="monster-stats-tbody">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid" id="monsters-grid"></div>
+    </div>
+
+    <!-- Heroes Tab Pane -->
+    <div id="tab-heroes-pane" class="hidden">
+      <div class="control-panel">
+        <div class="search-box">
+          <input type="text" id="hero-search" placeholder="ヒーロー名や特徴で検索 / Search heroes...">
+        </div>
+        <div class="filter-group" id="hero-tier-filters">
+          <span style="font-size: 11px; color: var(--text-muted);">職業ランク / Class Tier:</span>
+          <button class="filter-btn active" data-val="ALL">全て / All</button>
+          <button class="filter-btn" data-val="1">Tier 1 (下級職 / Basic)</button>
+          <button class="filter-btn" data-val="2">Tier 2 (上級職 / Advanced)</button>
+          <button class="filter-btn" data-val="3">Tier 3 (最上級職 / Master)</button>
+        </div>
+      </div>
+      <div class="grid" id="heroes-grid"></div>
+    </div>
+
+    <!-- Skills Tab Pane -->
+    <div id="tab-skills-pane" class="hidden">
+      <div class="control-panel">
+        <div class="search-box">
+          <input type="text" id="skill-search" placeholder="スキル名や効果説明で検索 / Search skills...">
+        </div>
+        <div class="filter-group" id="skill-element-filters">
+          <span style="font-size: 11px; color: var(--text-muted);">系統 / Type:</span>
+          <button class="filter-btn active" data-val="ALL">全て / All</button>
+          <button class="filter-btn" data-val="fire">🔥 火 / Fire</button>
+          <button class="filter-btn" data-val="water">❄️ 氷 / Ice</button>
+          <button class="filter-btn" data-val="light">✨ 光 / Light</button>
+          <button class="filter-btn" data-val="dark">🔮 闇 / Dark</button>
+          <button class="filter-btn" data-val="physical">⚔️ 物理 / Physical</button>
+        </div>
+      </div>
+      <div class="grid" id="skills-grid"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { MONSTERS, SKILLS, CLASSES, getMonsterName, getSkillName, getSkillDesc, getClassName, getClassDesc } from './js/config.js';
+
+    // Bilingual helpers (JP / EN) — global release
+    const bi = (ja, en) => (en && en !== ja) ? `${ja} / ${en}` : (ja || en || '');
+    const biLines = (ja, en) => (en && en !== ja) ? `${ja}<br><span style="color:var(--text-muted);font-size:0.92em;">${en}</span>` : (ja || en || '');
+    const mName = (k) => bi(getMonsterName(k, 'ja'), getMonsterName(k, 'en'));
+    const sName = (k) => bi(getSkillName(k, 'ja'), getSkillName(k, 'en'));
+    const sDesc = (k) => biLines(getSkillDesc(k, 'ja'), getSkillDesc(k, 'en'));
+    const cName = (k) => bi(getClassName(k, 'ja'), getClassName(k, 'en'));
+    const cDesc = (k) => biLines(getClassDesc(k, 'ja'), getClassDesc(k, 'en'));
+    const rangeBi = (r) => ({ '近接': '近接 / Melee', '遠距離': '遠距離 / Ranged', '自身': '自身 / Self' }[r] || r);
+
+    // Rarity definitions (bilingual labels)
+    const RARITIES = {
+      COMMON: { name: 'コモン / Common', color: '#aaaaaa' },
+      UNCOMMON: { name: 'アンコモン / Uncommon', color: '#33cc66' },
+      RARE: { name: 'レア / Rare', color: '#3399ff' },
+      EPIC: { name: 'エピック / Epic', color: '#9933ff' },
+      LEGENDARY: { name: 'レジェンダリー / Legendary', color: '#ff8800' }
+    };
+
+    // Elements definitions (bilingual labels)
+    const ELEMENTS = {
+      fire: { name: '火 / Fire', color: '#ff3333', icon: '🔥' },
+      water: { name: '水 / Water', color: '#33ccff', icon: '❄️' },
+      wind: { name: '風 / Wind', color: '#33ff55', icon: '⚡' },
+      earth: { name: '地 / Earth', color: '#ffcc66', icon: '⛰️' },
+      light: { name: '光 / Light', color: '#ffff99', icon: '✨' },
+      dark: { name: '闇 / Dark', color: '#cc33ff', icon: '🔮' },
+      physical: { name: '物理/無 / Physical', color: '#aaaaaa', icon: '⚔️' }
+    };
+
+    // Helper to get base sprite key
+    function getMonsterSpriteKey(mKey, mon) {
+      let key = mKey.toLowerCase();
+      if (mon && mon.spriteKey) {
+        key = mon.spriteKey.toLowerCase();
+      }
+      if (key === 'rat') key = 'flame_rat';
+      return key;
+    }
+
+    // Helper to estimate progress bars
+    const maxStats = { hp: 1200, atk: 60, def: 40, spd: 40, int: 50 };
+
+    // DOM Setup
+    const monstersGrid = document.getElementById('monsters-grid');
+    const skillsGrid = document.getElementById('skills-grid');
+
+    // Counters
+    document.getElementById('monsters-count').innerText = Object.keys(MONSTERS).length;
+    document.getElementById('skills-count').innerText = Object.keys(SKILLS).length;
+    document.getElementById('heroes-count').innerText = Object.keys(CLASSES).length;
+
+    // Tabs switching
+    const tabMonstersBtn = document.getElementById('tab-monsters-btn');
+    const tabSkillsBtn = document.getElementById('tab-skills-btn');
+    const tabHeroesBtn = document.getElementById('tab-heroes-btn');
+    const tabMonstersPane = document.getElementById('tab-monsters-pane');
+    const tabSkillsPane = document.getElementById('tab-skills-pane');
+    const tabHeroesPane = document.getElementById('tab-heroes-pane');
+
+    tabMonstersBtn.onclick = () => {
+      tabMonstersBtn.classList.add('active');
+      tabSkillsBtn.classList.remove('active');
+      tabHeroesBtn.classList.remove('active');
+      tabMonstersPane.classList.remove('hidden');
+      tabSkillsPane.classList.add('hidden');
+      tabHeroesPane.classList.add('hidden');
+    };
+
+    tabSkillsBtn.onclick = () => {
+      tabSkillsBtn.classList.add('active');
+      tabMonstersBtn.classList.remove('active');
+      tabHeroesBtn.classList.remove('active');
+      tabSkillsPane.classList.remove('hidden');
+      tabMonstersPane.classList.add('hidden');
+      tabHeroesPane.classList.add('hidden');
+    };
+
+    tabHeroesBtn.onclick = () => {
+      tabHeroesBtn.classList.add('active');
+      tabMonstersBtn.classList.remove('active');
+      tabSkillsBtn.classList.remove('active');
+      tabHeroesPane.classList.remove('hidden');
+      tabMonstersPane.classList.add('hidden');
+      tabSkillsPane.classList.add('hidden');
+    };
+
+    // Render Monsters
+    const statsTbody = document.getElementById('monster-stats-tbody');
+    function renderMonsters() {
+      monstersGrid.innerHTML = '';
+      if (statsTbody) statsTbody.innerHTML = '';
+      const nameFilter = document.getElementById('monster-search').value.toLowerCase();
+      const rarityFilter = document.querySelector('#monster-rarity-filters .active').dataset.val;
+      const elementFilter = document.querySelector('#monster-element-filters .active').dataset.val;
+
+      for (const [key, mon] of Object.entries(MONSTERS)) {
+        const spriteKey = getMonsterSpriteKey(key, mon);
+        const name = mon.name;
+        const rarity = mon.rarity || 'COMMON';
+        const element = mon.element || 'physical';
+        
+        // Search filter
+        if (nameFilter && !name.toLowerCase().includes(nameFilter) && !element.toLowerCase().includes(nameFilter)) {
+          continue;
+        }
+
+        // Rarity filter
+        if (rarityFilter !== 'ALL' && rarity !== rarityFilter) {
+          continue;
+        }
+
+        // Element filter
+        if (elementFilter !== 'ALL' && element !== elementFilter) {
+          continue;
+        }
+
+        const rarityInfo = RARITIES[rarity];
+        const elementInfo = ELEMENTS[element] || ELEMENTS.physical;
+
+        // Add row to stats summary table
+        if (statsTbody) {
+          const row = document.createElement('tr');
+          row.style.borderBottom = '1px solid rgba(136, 51, 204, 0.15)';
+          row.innerHTML = `
+            <td style="padding: 6px 4px;">
+              <a href="#monster-card-${key}" style="color: var(--cyan); text-decoration: none; font-weight: bold;">
+                ${mName(key)}
+              </a>
+            </td>
+            <td style="padding: 6px 4px; color: ${rarityInfo.color}; font-weight: bold; font-size: 11px;">${rarityInfo.name}</td>
+            <td style="padding: 6px 4px; color: ${elementInfo.color}; font-weight: bold; font-size: 11px;">${elementInfo.icon} ${elementInfo.name}</td>
+            <td style="padding: 6px 4px; text-align: right; font-weight: bold; color: #fff;">${mon.hp}</td>
+            <td style="padding: 6px 4px; text-align: right; color: #ffaa33;">${mon.atk}</td>
+            <td style="padding: 6px 4px; text-align: right; color: #33aaff;">${mon.def}</td>
+            <td style="padding: 6px 4px; text-align: right; color: #33ffaa;">${mon.spd}</td>
+            <td style="padding: 6px 4px; text-align: right; color: #cc55ff;">${mon.int}</td>
+          `;
+          statsTbody.appendChild(row);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `monster-card-${key}`;
+        card.style.borderColor = elementInfo.color + '44';
+
+        // Filter styles
+        let filterStyle = '';
+        if (mon.hueShift !== undefined) {
+          const h = mon.hueShift;
+          const s = mon.saturate !== undefined ? mon.saturate : 1.0;
+          const b = mon.brightness !== undefined ? mon.brightness : 1.0;
+          filterStyle = `style="filter: hue-rotate(${h}deg) saturate(${s}) brightness(${b});"`;
+        }
+
+        // Skill list HTML
+        let skillsHTML = '';
+        if (mon.skillTree && mon.skillTree.length > 0) {
+          skillsHTML = mon.skillTree.map(skNode => {
+            const sk = SKILLS[skNode.skill];
+            return `<div class="skill-link">
+                      <span>LV${skNode.level}</span>
+                      <strong style="color: ${sk?.color || '#fff'};">${sName(skNode.skill)}</strong>
+                    </div>`;
+          }).join('');
+        }
+
+        card.innerHTML = `
+          <div class="rarity-badge" style="background: ${rarityInfo.color}; color: #000;">${rarityInfo.name}</div>
+          <div class="card-header">
+            <div class="monster-avatar-frame" style="border-color: ${elementInfo.color}88;">
+              <img class="monster-avatar" src="sprites/monsters/${spriteKey}.png" ${filterStyle} onerror="this.src='sprites/frames2/${spriteKey}/walk/f01.png'; this.onerror=null;">
+            </div>
+            <div class="monster-name-area">
+              <span class="monster-title">${mName(key)}</span>
+              <span class="element-badge" style="background: ${elementInfo.color}22; color: ${elementInfo.color}; border: 1px solid ${elementInfo.color}44;">
+                ${elementInfo.icon} ${elementInfo.name}
+              </span>
+            </div>
+          </div>
+          <div>
+            <table class="stats-table">
+              <tr>
+                <td>HP:</td>
+                <td>${mon.hp}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.hp / maxStats.hp) * 100)}%; background: #ff5566;"></div></div></td>
+              </tr>
+              <tr>
+                <td>物理攻撃力 (ATK):</td>
+                <td>${mon.atk}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.atk / maxStats.atk) * 100)}%; background: #ffaa33;"></div></div></td>
+              </tr>
+              <tr>
+                <td>物理防御力 (DEF):</td>
+                <td>${mon.def}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.def / maxStats.def) * 100)}%; background: #33aaff;"></div></div></td>
+              </tr>
+              <tr>
+                <td>素早さ (SPD):</td>
+                <td>${mon.spd}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.spd / maxStats.spd) * 100)}%; background: #33ffaa;"></div></div></td>
+              </tr>
+              <tr>
+                <td>魔法威力 (INT):</td>
+                <td>${mon.int}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.int / maxStats.int) * 100)}%; background: #cc55ff;"></div></div></td>
+              </tr>
+            </table>
+          </div>
+          <div class="skills-area">
+            <span class="skills-title">習得スキル / Skills</span>
+            ${skillsHTML || '<div style="font-size: 11px; color: var(--text-muted);">なし / None</div>'}
+          </div>
+        `;
+        monstersGrid.appendChild(card);
+      }
+    }
+
+    // Helper to get hero base sprite folder name from classKey
+    function getHeroSpriteKey(classKey) {
+      return classKey.toLowerCase();
+    }
+
+    const maxHeroStats = { hp: 1200, mp: 200, atk: 150, def: 100, spd: 50, int: 100 };
+
+    // Render Heroes
+    function renderHeroes() {
+      const heroesGrid = document.getElementById('heroes-grid');
+      heroesGrid.innerHTML = '';
+      const searchFilter = document.getElementById('hero-search').value.toLowerCase();
+      const tierFilter = document.querySelector('#hero-tier-filters .active').dataset.val;
+
+      for (const [key, cls] of Object.entries(CLASSES)) {
+        const name = cls.name;
+        const tier = cls.tier || 1;
+        const range = cls.rangeType || '近接';
+        const desc = cls.description || '';
+        
+        // Search Filter
+        if (searchFilter && !name.toLowerCase().includes(searchFilter) && !desc.toLowerCase().includes(searchFilter) && !range.toLowerCase().includes(searchFilter)) {
+          continue;
+        }
+
+        // Tier Filter
+        if (tierFilter !== 'ALL' && tier.toString() !== tierFilter) {
+          continue;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderColor = cls.color + '44';
+
+        const spriteKey = getHeroSpriteKey(key);
+
+        // Skill list HTML for this class
+        let skillsHTML = '';
+        if (cls.skillTree && cls.skillTree.length > 0) {
+          skillsHTML = cls.skillTree.map(skNode => {
+            const sk = SKILLS[skNode.skill];
+            return `<div class="skill-link">
+                      <span>LV${skNode.level}</span>
+                      <strong style="color: ${sk?.color || '#fff'};">${sName(skNode.skill)}</strong>
+                    </div>`;
+          }).join('');
+        }
+
+        // Promotion details
+        let promoHTML = '';
+        if (cls.promotion) {
+          const nextName = cName(cls.promotion.next);
+          promoHTML = `<div style="font-size: 11px; background: rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.3); padding: 6px; border-radius: 4px; color: #00ffff; margin-top: 10px;">
+                         <strong>転職 / Promotion:</strong> LV${cls.promotion.level} で <strong>${nextName}</strong> へ昇格可 (費用: 👻${cls.promotion.cost} ソウル / Cost: ${cls.promotion.cost} Souls)
+                       </div>`;
+        } else {
+          promoHTML = `<div style="font-size: 11px; background: rgba(255, 255, 255, 0.05); border: 1px dashed rgba(255, 255, 255, 0.2); padding: 6px; border-radius: 4px; color: var(--text-muted); margin-top: 10px; text-align: center;">
+                         最高ランク (転職上限) / Max rank
+                       </div>`;
+        }
+
+        card.innerHTML = `
+          <div class="rarity-badge" style="background: ${cls.color || '#fff'}; color: #000; font-weight: bold;">Tier ${tier}</div>
+          <div class="card-header">
+            <div class="monster-avatar-frame" style="border-color: ${cls.color}88;">
+              <img class="monster-avatar" src="sprites/frames2/${spriteKey}/walk/f01.png" onerror="this.src='sprites/monsters/warrior_1.png'; this.onerror=null;">
+            </div>
+            <div class="monster-name-area">
+              <span class="monster-title" style="color: ${cls.color || '#fff'};">${cName(key)}</span>
+              <span class="element-badge" style="background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);">
+                ${rangeBi(range)}
+              </span>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); min-height: 35px; line-height: 1.4; margin-bottom: 8px;">
+            ${cDesc(key)}
+          </div>
+          <div>
+            <table class="stats-table">
+              <tr>
+                <td>基本HP:</td>
+                <td>${cls.baseHP}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseHP / maxHeroStats.hp) * 100)}%; background: #ff5566;"></div></div></td>
+              </tr>
+              <tr>
+                <td>基本MP:</td>
+                <td>${cls.baseMP}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseMP / maxHeroStats.mp) * 100)}%; background: #0088ff;"></div></div></td>
+              </tr>
+              <tr>
+                <td>基本攻撃力 (ATK):</td>
+                <td>${cls.baseATK}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseATK / maxHeroStats.atk) * 100)}%; background: #ffaa33;"></div></div></td>
+              </tr>
+              <tr>
+                <td>基本防御力 (DEF):</td>
+                <td>${cls.baseDEF}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseDEF / maxHeroStats.def) * 100)}%; background: #33aaff;"></div></div></td>
+              </tr>
+              <tr>
+                <td>素早さ (SPD):</td>
+                <td>${cls.baseSPD}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseSPD / maxHeroStats.spd) * 100)}%; background: #33ffaa;"></div></div></td>
+              </tr>
+              <tr>
+                <td>魔法威力 (INT):</td>
+                <td>${cls.baseINT}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseINT / maxHeroStats.int) * 100)}%; background: #cc55ff;"></div></div></td>
+              </tr>
+            </table>
+          </div>
+          <div class="skills-area">
+            <span class="skills-title">習得スキル / Skills</span>
+            ${skillsHTML || '<div style="font-size: 11px; color: var(--text-muted);">なし / None</div>'}
+          </div>
+          ${promoHTML}
+        `;
+        heroesGrid.appendChild(card);
+      }
+    }
+
+    // Render Skills
+    function renderSkills() {
+      skillsGrid.innerHTML = '';
+      const searchFilter = document.getElementById('skill-search').value.toLowerCase();
+      const elementFilter = document.querySelector('#skill-element-filters .active').dataset.val;
+
+      for (const [key, sk] of Object.entries(SKILLS)) {
+        const name = sk.name || key;
+        const desc = sk.description || '';
+        const et = sk.effectType || '';
+        
+        // Resolve system element of skill
+        let element = 'physical';
+        if (et.includes('fire') || et.includes('flame') || desc.includes('火') || desc.includes('炎')) {
+          element = 'fire';
+        } else if (et.includes('ice') || et.includes('blizzard') || desc.includes('氷') || desc.includes('凍')) {
+          element = 'water';
+        } else if (et.includes('holy') || et.includes('divine') || et.includes('heal') || et.includes('revive') || et.includes('cleanse')) {
+          element = 'light';
+        } else if (et.includes('dark') || et.includes('apocalypse') || et.includes('blood') || et.includes('poison')) {
+          element = 'dark';
+        }
+
+        // Search Filter
+        if (searchFilter && !name.toLowerCase().includes(searchFilter) && !desc.toLowerCase().includes(searchFilter)) {
+          continue;
+        }
+
+        // Element/System Filter
+        if (elementFilter !== 'ALL' && element !== elementFilter) {
+          continue;
+        }
+
+        const elInfo = ELEMENTS[element];
+
+        const card = document.createElement('div');
+        card.className = 'skill-card';
+        card.style.borderLeft = `4px solid ${sk.color || elInfo.color || '#fff'}`;
+
+        const cooldownSec = (sk.cooldown / 1000).toFixed(1);
+        let rangeText = sk.range > 0 ? (sk.range <= 60 ? '近接 / Melee' : '遠距離 / Ranged') : '自身 / Self';
+
+        card.innerHTML = `
+          <div class="skill-header">
+            <span class="skill-name" style="color: ${sk.color || '#fff'};">${sName(key)}</span>
+            <span style="font-size: 10px; background: ${elInfo.color}33; color: ${elInfo.color}; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+              ${elInfo.icon} ${elInfo.name}
+            </span>
+          </div>
+          <div class="skill-meta">
+            <span>消耗MP / MP: <strong style="color: var(--cyan);">${sk.mpCost}</strong></span>
+            <span>リキャスト / CT: <strong>${cooldownSec}s</strong></span>
+            <span>射程 / Range: <strong>${rangeText}</strong></span>
+          </div>
+          <div class="skill-desc">${sDesc(key)}</div>
+        `;
+        skillsGrid.appendChild(card);
+      }
+    }
+
+    // Set Filter Events
+    function setupFilters() {
+      // Monster filters
+      document.getElementById('monster-search').addEventListener('input', renderMonsters);
+      
+      document.querySelectorAll('#monster-rarity-filters .filter-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#monster-rarity-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderMonsters();
+        };
+      });
+
+      document.querySelectorAll('#monster-element-filters .filter-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#monster-element-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderMonsters();
+        };
+      });
+
+      // Skill filters
+      document.getElementById('skill-search').addEventListener('input', renderSkills);
+
+      document.querySelectorAll('#skill-element-filters .filter-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#skill-element-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderSkills();
+        };
+      });
+
+      // Hero filters
+      document.getElementById('hero-search').addEventListener('input', renderHeroes);
+
+      document.querySelectorAll('#hero-tier-filters .filter-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#hero-tier-filters .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderHeroes();
+        };
+      });
+    }
+
+    // Initial render
+    setupFilters();
+    renderMonsters();
+    renderSkills();
+    renderHeroes();
+  </script>
+</body>
+</html>
