@@ -83,6 +83,8 @@
     section.block h2 { font-size: 16px; margin: 0 0 8px; }
     footer { margin: 32px 0 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; }
     footer p { margin: 4px 0; }
+    footer p.dc { margin: 0 0 12px; color: var(--text); font-size: 13.5px; line-height: 1.7; }
+    footer p.dc a { color: #cc99ff; font-weight: 600; }
     .empty { color: var(--muted); padding: 24px 0; text-align: center; }
   </style>
 </head>
@@ -110,6 +112,8 @@
     if (!D) { $('list').textContent = 'Data could not be loaded.'; return; }
 
     // ---- 画面の文字(4言語)。ゲームの中の用語に合わせる ----
+    // Discord(プレイヤー同士の交流の場)への招待リンク。名前と添える文は、下の表の dc・dcNote。
+    var DISCORD = 'https://discord.gg/AH5rbAec4S';
     var UI = {
       ja: { name: '日本語', ttl: '図鑑', ver: 'バージョン {v} のデータです（{d} 作成）', monsters: 'モンスター', classes: '職業', skills: 'スキル', fusion: '合成', gear: '装備・属性',
         search: '名前で探す', all: 'すべて', rarity: 'レア度', element: '属性', noel: '無属性', kind: '種類', kWild: '野生に出る', kFo: '野生に出ない', kCastle: '城のモンスター', kBoss: '曜日ボス', kSeason: 'シーズン{n}',
@@ -117,6 +121,7 @@
         aw: '特殊合成（両方とも覚醒★{n}以上）', ranged: '間接', melee: '近接', medal: '勲章ショップ', far: '遠距離', tier: 'Tier {n}', promo: 'LV {l}・ソウル {c} で「{n}」へ転職', c3: '三職の掛け合わせ',
         unlock: '解放の条件: 同じヒーローで、次のうち {need} つを Tier 3・LV {level} 以上にする', mp: 'MP', cd: 'クールダウン', sec: '{s} 秒', range: '射程', aoe: '範囲', power: '威力', scaling: '依存',
         lc: '覚える職業', lm: '覚えるモンスター', rarH: '装備のレア度', mul: '能力の倍率', opts: 'オプションの数', optH: 'オプションの種類', baseSt: '基礎値', relH: '属性の相性（与えるダメージ）',
+        dc: 'Discord（プレイヤー同士の交流の場）', dcNote: '質問や攻略の話はこちらでどうぞ。不具合の報告、データの復旧、要望は、ゲーム内の「お問い合わせ」（メニュー > ヘルプ）からお送りください。製作者はたまに見る程度です。',
         gacha: 'ガチャの確率は、ゲーム内のガチャの画面で確認できます。', note: 'このページは、公開中のバージョンのデータから自動で作っています。', close: '閉じる', empty: '見つかりません', day: '{d}曜', days: ['日', '月', '火', '水', '木', '金', '土'], sys: '{n} 系統' },
       en: { name: 'English', ttl: 'Encyclopedia', ver: 'Data from version {v} (built {d})', monsters: 'Monsters', classes: 'Classes', skills: 'Skills', fusion: 'Fusion', gear: 'Gear & Elements',
         search: 'Search by name', all: 'All', rarity: 'Rarity', element: 'Element', noel: 'None', kind: 'Type', kWild: 'Found in the wild', kFo: 'Not in the wild', kCastle: 'Castle monsters', kBoss: 'Weekday Boss', kSeason: 'Season {n}',
@@ -124,6 +129,7 @@
         aw: 'Special fusion (both need Awakening ★{n}+)', ranged: 'Ranged', melee: 'Melee', medal: 'Medal Shop', far: 'Long range', tier: 'Tier {n}', promo: 'Class change to "{n}" at LV {l} for {c} Souls', c3: 'Triple class',
         unlock: 'Unlock: on the same hero, raise {need} of these to Tier 3, LV {level} or higher', mp: 'MP', cd: 'Cooldown', sec: '{s} s', range: 'Range', aoe: 'Area', power: 'Power', scaling: 'Scales with',
         lc: 'Classes that learn it', lm: 'Monsters that learn it', rarH: 'Gear rarity', mul: 'Stat multiplier', opts: 'Options', optH: 'Option types', baseSt: 'Base', relH: 'Element matchups (damage dealt)',
+        dc: 'Discord (player community)', dcNote: 'Chat about tips and questions here. For bug reports, data recovery, and feature requests, please use "Contact Us" inside the game (Menu > Help). The developer only checks in occasionally.',
         gacha: 'Gacha rates are shown on the Gacha screen in the game.', note: 'This page is generated automatically from the data of the released version.', close: 'Close', empty: 'No results', day: '{d}', days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], sys: '{n} lines' },
       zh: { name: '繁體中文', ttl: '圖鑑', ver: '版本 {v} 的資料（{d} 製作）', monsters: '怪物', classes: '職業', skills: '技能', fusion: '合成', gear: '裝備・屬性',
         search: '以名稱搜尋', all: '全部', rarity: '稀有度', element: '屬性', noel: '無屬性', kind: '類型', kWild: '野外出現', kFo: '野外不出現', kCastle: '城堡的怪物', kBoss: '星期頭目', kSeason: '第{n}季',
@@ -131,6 +137,7 @@
         aw: '特殊合成（雙方皆需覺醒★{n}以上）', ranged: '遠程', melee: '近戰', medal: '勳章商店', far: '遠距離', tier: '{z}階', promo: 'LV {l}・靈魂 {c} 可轉職為「{n}」', c3: '三職組合',
         unlock: '解鎖條件：同一位英雄將以下其中 {need} 種提升至三階 LV {level} 以上', mp: 'MP', cd: '冷卻', sec: '{s} 秒', range: '射程', aoe: '範圍', power: '威力', scaling: '依存',
         lc: '習得的職業', lm: '習得的怪物', rarH: '裝備稀有度', mul: '能力倍率', opts: '附加屬性數', optH: '附加屬性種類', baseSt: '基礎值', relH: '屬性相剋（造成的傷害）',
+        dc: 'Discord（玩家交流社群）', dcNote: '攻略與提問請到這裡交流。回報錯誤、資料復原與功能建議，請從遊戲內「說明」的「聯絡我們」送出。製作者只會偶爾來看看。',
         gacha: '轉蛋機率可在遊戲內的轉蛋畫面確認。', note: '本頁面由已發布版本的資料自動產生。', close: '關閉', empty: '找不到', day: '星期{d}', days: ['日', '一', '二', '三', '四', '五', '六'], sys: '{n} 個系統' },
       ko: { name: '한국어', ttl: '도감', ver: '버전 {v} 데이터입니다 ({d} 작성)', monsters: '몬스터', classes: '직업', skills: '스킬', fusion: '합성', gear: '장비·속성',
         search: '이름으로 검색', all: '전체', rarity: '등급', element: '속성', noel: '무속성', kind: '종류', kWild: '야생 출현', kFo: '야생 미출현', kCastle: '성의 몬스터', kBoss: '요일 보스', kSeason: '시즌 {n}',
@@ -138,6 +145,7 @@
         aw: '특수 합성(둘 다 각성 ★{n} 이상)', ranged: '원거리', melee: '근접', medal: '훈장 상점', far: '장거리', tier: 'Tier {n}', promo: 'LV {l}·소울 {c}로 「{n}」 전직', c3: '3직업 조합',
         unlock: '해방 조건: 같은 영웅으로 다음 중 {need}개를 Tier 3·LV {level} 이상으로 육성', mp: 'MP', cd: '쿨타임', sec: '{s}초', range: '사거리', aoe: '범위', power: '위력', scaling: '의존',
         lc: '습득 직업', lm: '습득 몬스터', rarH: '장비 등급', mul: '능력 배율', opts: '옵션 수', optH: '옵션 종류', baseSt: '기본값', relH: '속성 상성(주는 피해)',
+        dc: 'Discord(플레이어 커뮤니티)', dcNote: '공략과 질문은 이곳에서 나눠 주세요. 버그 신고, 데이터 복구, 건의 사항은 게임 내 도움말 > 문의하기로 보내 주세요. 제작자는 가끔 확인하는 정도입니다.',
         gacha: '뽑기 확률은 게임 내 뽑기 화면에서 확인할 수 있습니다.', note: '이 페이지는 출시된 버전의 데이터로 자동 생성됩니다.', close: '닫기', empty: '결과 없음', day: '{d}요일', days: ['일', '월', '화', '수', '목', '금', '토'], sys: '{n}개 계통' }
     };
     var LANGS = ['ja', 'en', 'zh', 'ko'], TABS = ['monsters', 'classes', 'skills', 'fusion', 'gear'];
@@ -217,7 +225,7 @@
       $('langs').innerHTML = LANGS.map(function (l) { return '<button type="button" data-lang="' + l + '" aria-pressed="' + (l === lang) + '">' + esc(UI[l].name) + '</button>'; }).join('');
       $('tabs').innerHTML = TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t + '" aria-selected="' + (t === tab) + '">' + esc(U[t]) + '</button>'; }).join('');
       $('mclose').textContent = U.close;
-      $('foot').innerHTML = '<p>' + esc(U.gacha) + '</p><p>' + esc(U.note) + ' ' + esc(fmt(U.ver, { v: D.meta.version, d: D.meta.date })) + '</p>';
+      $('foot').innerHTML = '<p class="dc"><a href="' + DISCORD + '" target="_blank" rel="noopener noreferrer">' + esc(U.dc) + '</a><br>' + esc(U.dcNote) + '</p><p>' + esc(U.gacha) + '</p><p>' + esc(U.note) + ' ' + esc(fmt(U.ver, { v: D.meta.version, d: D.meta.date })) + '</p>';
       controls();
     }
     function sel(id, label, opts, val) {
