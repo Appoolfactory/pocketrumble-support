@@ -3,913 +3,388 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pocket Rumble（ポケットランブル） - 図鑑 / Encyclopedia (Monsters & Skills)</title>
+  <title>Pocket Rumble 図鑑 / Encyclopedia</title>
+  <!-- 読むだけの公式の図鑑。データは encyclopedia/data.js と encyclopedia/i18n.<言語>.js(tools/wiki/build.mjs が公開中の版から作る)。
+       このページにゲームのデータのファイルそのものは置かない。作り方と決まりは tools/wiki/build.mjs の頭。 -->
   <style>
-    :root {
-      --bg-dark: #0f0518;
-      --card-bg: rgba(27, 12, 42, 0.65);
-      --accent: #8833cc;
-      --accent-glow: rgba(136, 51, 204, 0.4);
-      --text: #e0d5eb;
-      --text-muted: #a992c4;
-      --cyan: #00ffff;
-      --gold: #ffcc00;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      background-image: radial-gradient(circle at top, #220d3a 0%, #0d0418 100%);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    header {
-      max-width: 1200px;
-      margin: 0 auto 30px auto;
-      text-align: center;
-      border-bottom: 2px solid var(--accent);
-      padding-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    }
-
-    h1 {
-      font-size: 32px;
-      font-weight: 900;
-      text-shadow: 0 0 10px #cc33ff, 0 0 20px var(--accent), 0 0 40px var(--cyan);
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: var(--cyan);
-      text-shadow: 0 0 5px var(--cyan);
-      letter-spacing: 2px;
-      margin-bottom: 20px;
-    }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-    }
-
-    .tab-btn {
-      background: rgba(136, 51, 204, 0.2);
-      border: 2px solid var(--accent);
-      color: #fff;
-      padding: 10px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 0 10px var(--accent-glow);
-      transition: all 0.2s ease;
-    }
-
-    .tab-btn.active, .tab-btn:hover {
-      background: rgba(0, 255, 255, 0.3);
-      border-color: var(--cyan);
-      box-shadow: 0 0 15px var(--cyan);
-      transform: scale(1.05);
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .control-panel {
-      background: var(--card-bg);
-      border: 1px solid rgba(136, 51, 204, 0.3);
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 25px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .search-box {
-      flex: 1;
-      min-width: 250px;
-      position: relative;
-    }
-
-    .search-box input {
-      width: 100%;
-      background: rgba(18, 9, 32, 0.8);
-      border: 1px solid var(--accent);
-      color: #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-    }
-
-    .search-box input:focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 10px var(--cyan);
-    }
-
-    .filter-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .filter-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(136, 51, 204, 0.2);
-      color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .filter-btn.active, .filter-btn:hover {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--cyan);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 2px solid rgba(136, 51, 204, 0.3);
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      border-color: var(--cyan);
-      box-shadow: 0 8px 25px var(--accent-glow);
-    }
-
-    .rarity-badge {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      font-size: 10px;
-      font-weight: 900;
-      padding: 2px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      border-bottom: 1px solid rgba(136, 51, 204, 0.2);
-      padding-bottom: 12px;
-    }
-
-    .monster-avatar-frame {
-      width: 60px;
-      height: 60px;
-      background: rgba(18, 9, 32, 0.8);
-      border: 2px solid var(--accent);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .monster-avatar {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-    }
-
-    .monster-name-area {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .monster-title {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .element-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 2px 6px;
-      border-radius: 4px;
-      width: fit-content;
-    }
-
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .stats-table td {
-      padding: 4px 0;
-    }
-
-    .stats-table td:nth-child(even) {
-      text-align: right;
-      font-weight: bold;
-      color: #fff;
-    }
-
-    .stat-bar-container {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-top: 2px;
-    }
-
-    .stat-bar {
-      height: 100%;
-      border-radius: 3px;
-    }
-
-    .skills-area {
-      border-top: 1px solid rgba(136, 51, 204, 0.2);
-      padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .skills-title {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: bold;
-    }
-
-    .skill-link {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 4px 8px;
-      border-radius: 4px;
-      border-left: 2px solid var(--accent);
-    }
-
-    /* Skill Item styles */
-    .skill-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(136, 51, 204, 0.3);
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      transition: all 0.2s;
-    }
-
-    .skill-card:hover {
-      border-color: var(--cyan);
-      box-shadow: 0 4px 15px var(--accent-glow);
-    }
-
-    .skill-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      padding-bottom: 8px;
-    }
-
-    .skill-name {
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .skill-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .skill-desc {
-      font-size: 12px;
-      line-height: 1.4;
-      color: #dfd0f0;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    :root { --bg: #0f0518; --panel: #1b0c2a; --panel2: #24113a; --line: #3a2157; --accent: #a55cf0; --text: #e8dff2; --muted: #a992c4; --gold: #ffcc55; }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--bg); background-image: radial-gradient(circle at top, #220d3a 0%, #0d0418 70%); background-attachment: fixed; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Noto Sans TC", "Apple SD Gothic Neo", "Malgun Gothic", Roboto, Arial, sans-serif; font-size: 15px; line-height: 1.6; }
+    button, input, select { font: inherit; color: inherit; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+    header { padding: 20px 0 12px; border-bottom: 1px solid var(--line); }
+    header .wrap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+    h1 { margin: 0; font-size: 22px; letter-spacing: .04em; }
+    h1 span { color: var(--accent); margin-left: 6px; }
+    #ver { margin: 0; color: var(--muted); font-size: 12px; flex: 1 1 200px; }
+    #langs { display: flex; gap: 6px; flex-wrap: wrap; }
+    #langs button { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: 13px; cursor: pointer; }
+    #langs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    nav { position: sticky; top: 0; z-index: 5; background: rgba(15, 5, 24, .96); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; gap: 4px; overflow-x: auto; }
+    nav button { background: none; border: 0; border-bottom: 3px solid transparent; padding: 12px 12px 9px; cursor: pointer; white-space: nowrap; color: var(--muted); }
+    nav button[aria-selected="true"] { color: #fff; border-bottom-color: var(--accent); font-weight: 600; }
+    #controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0 6px; align-items: center; }
+    #controls input, #controls select { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+    #controls input { flex: 1 1 180px; min-width: 0; }
+    #count { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+    .card:hover, .row:hover { border-color: var(--accent); }
+    .card img, .th { width: 64px; height: 64px; object-fit: contain; }
+    .card .nm { font-size: 12.5px; line-height: 1.3; word-break: break-word; }
+    .tag { display: inline-block; font-size: 11px; line-height: 1.5; padding: 0 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+    .tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+    .rows { display: flex; flex-direction: column; gap: 6px; }
+    .row { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; width: 100%; }
+    .row .nm { font-weight: 600; flex: 1 1 150px; min-width: 0; }
+    .row .sub { color: var(--muted); font-size: 12px; }
+    .row.static { cursor: default; }
+    .row.static:hover { border-color: var(--line); }
+    .sys { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; cursor: pointer; text-align: left; display: flex; gap: 10px; align-items: center; width: 100%; }
+    .sys:hover { border-color: var(--accent); }
+    .sys .pics { display: flex; }
+    .sys .pics img { width: 44px; height: 44px; object-fit: contain; }
+    .sysgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+    .fus { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .fus .mon { display: inline-flex; align-items: center; gap: 4px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px 2px 2px; cursor: pointer; font-size: 13px; }
+    .fus .mon img { width: 36px; height: 36px; object-fit: contain; }
+    .fus .op { color: var(--muted); }
+    #modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .6); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+    #modal[hidden] { display: none; }
+    .sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 14px 14px 0 0; width: 100%; max-width: 720px; max-height: 88vh; overflow: auto; padding: 14px 16px 28px; position: relative; }
+    @media (min-width: 760px) { #modal { align-items: center; } .sheet { border-radius: 14px; } }
+    .sheet .x { position: sticky; top: 0; float: right; margin-left: 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; z-index: 2; }
+    .sheet h2 { margin: 0 0 6px; font-size: 19px; }
+    .sheet h3 { margin: 16px 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+    .head { display: flex; gap: 12px; align-items: center; }
+    .head img { width: 88px; height: 88px; object-fit: contain; flex: none; }
+    .head .tags { justify-content: flex-start; }
+    table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+    th { color: var(--muted); font-weight: 600; }
+    th:first-child, td:first-child { text-align: left; }
+    .scroll { overflow-x: auto; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chips button { background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; }
+    .chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .sk { display: flex; flex-direction: column; gap: 4px; }
+    .sk button { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; text-align: left; display: flex; gap: 10px; align-items: baseline; }
+    .sk .lv { color: var(--gold); font-size: 12px; min-width: 44px; font-variant-numeric: tabular-nums; }
+    .sk .d { color: var(--muted); font-size: 12px; display: block; }
+    .desc { margin: 6px 0; }
+    .tier { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-top: 10px; background: rgba(0, 0, 0, .15); }
+    .tier .head img { width: 64px; height: 64px; }
+    .note { color: var(--muted); font-size: 12.5px; }
+    .links { display: flex; flex-wrap: wrap; gap: 6px; }
+    .links button { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; cursor: pointer; font-size: 13px; }
+    section.block { margin: 18px 0; }
+    section.block h2 { font-size: 16px; margin: 0 0 8px; }
+    footer { margin: 32px 0 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+    footer p { margin: 4px 0; }
+    .empty { color: var(--muted); padding: 24px 0; text-align: center; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>POCKET RUMBLE</h1>
-    <div class="subtitle">ポケットランブル 公式ライブラリ＆図鑑 / Official Library &amp; Encyclopedia ・ <a href="index.html" style="color:#00ffff;">サポート / Support</a></div>
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-monsters-btn">🐉 モンスター図鑑 / Monsters (<span id="monsters-count">0</span>)</button>
-      <button class="tab-btn" id="tab-skills-btn">🪄 スキル一覧 / Skills (<span id="skills-count">0</span>)</button>
-      <button class="tab-btn" id="tab-heroes-btn">🛡️ ヒーロー図鑑 / Heroes (<span id="heroes-count">0</span>)</button>
-    </div>
-  </header>
+  <header><div class="wrap">
+    <h1>Pocket Rumble<span id="ttl">図鑑</span></h1>
+    <p id="ver"></p>
+    <div id="langs" role="group" aria-label="Language"></div>
+  </div></header>
+  <nav><div class="wrap" id="tabs" role="tablist"></div></nav>
+  <div class="wrap">
+    <div id="controls"></div>
+    <p id="count"></p>
+    <main id="list"></main>
+    <footer id="foot"></footer>
+  </div>
+  <div id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="x" id="mclose"></button><div id="detail"></div></div></div>
 
-  <main class="container">
-    <!-- Monsters Tab Pane -->
-    <div id="tab-monsters-pane">
-      <div class="control-panel">
-        <div class="search-box">
-          <input type="text" id="monster-search" placeholder="モンスター名や属性で検索 / Search monsters...">
-        </div>
-        <div class="filter-group" id="monster-rarity-filters">
-          <span style="font-size: 11px; color: var(--text-muted);">レアリティ / Rarity:</span>
-          <button class="filter-btn active" data-val="ALL">全て / All</button>
-          <button class="filter-btn" data-val="COMMON">コモン / Common</button>
-          <button class="filter-btn" data-val="UNCOMMON">アンコモン / Uncommon</button>
-          <button class="filter-btn" data-val="RARE">レア / Rare</button>
-          <button class="filter-btn" data-val="EPIC">エピック / Epic</button>
-          <button class="filter-btn" data-val="LEGENDARY">レジェンダリー / Legendary</button>
-        </div>
-        <div class="filter-group" id="monster-element-filters">
-          <span style="font-size: 11px; color: var(--text-muted);">属性 / Element:</span>
-          <button class="filter-btn active" data-val="ALL">全て / All</button>
-          <button class="filter-btn" data-val="fire">🔥 火 / Fire</button>
-          <button class="filter-btn" data-val="water">❄️ 水 / Water</button>
-          <button class="filter-btn" data-val="wind">⚡ 風 / Wind</button>
-          <button class="filter-btn" data-val="earth">⛰️ 地 / Earth</button>
-          <button class="filter-btn" data-val="light">✨ 光 / Light</button>
-          <button class="filter-btn" data-val="dark">🔮 闇 / Dark</button>
-          <button class="filter-btn" data-val="physical">⚔️ 物理 / Physical</button>
-        </div>
-      </div>
+  <script src="encyclopedia/data.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var D = window.PR_WIKI_DATA;
+    var $ = function (id) { return document.getElementById(id); };
+    if (!D) { $('list').textContent = 'Data could not be loaded.'; return; }
 
-      <!-- Monster Stats Summary Table -->
-      <div id="monster-stats-table-container" style="background: var(--card-bg); border: 1px solid rgba(136, 51, 204, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; overflow-x: auto; max-height: 350px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);">
-        <h3 style="margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid rgba(136, 51, 204, 0.2); padding-bottom: 8px; color: var(--cyan); text-shadow: 0 0 5px var(--cyan);">🐉 モンスター基本ステータス一覧 / Monster Base Stats</h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
-          <thead>
-            <tr style="border-bottom: 2px solid rgba(136, 51, 204, 0.5); color: var(--text-muted);">
-              <th style="padding: 6px 4px;">名前 / Name</th>
-              <th style="padding: 6px 4px;">レア度 / Rarity</th>
-              <th style="padding: 6px 4px;">属性 / Element</th>
-              <th style="padding: 6px 4px; text-align: right;">HP</th>
-              <th style="padding: 6px 4px; text-align: right;">ATK</th>
-              <th style="padding: 6px 4px; text-align: right;">DEF</th>
-              <th style="padding: 6px 4px; text-align: right;">SPD</th>
-              <th style="padding: 6px 4px; text-align: right;">INT</th>
-            </tr>
-          </thead>
-          <tbody id="monster-stats-tbody">
-            <!-- Dynamic Rows -->
-          </tbody>
-        </table>
-      </div>
-
-      <div class="grid" id="monsters-grid"></div>
-    </div>
-
-    <!-- Heroes Tab Pane -->
-    <div id="tab-heroes-pane" class="hidden">
-      <div class="control-panel">
-        <div class="search-box">
-          <input type="text" id="hero-search" placeholder="ヒーロー名や特徴で検索 / Search heroes...">
-        </div>
-        <div class="filter-group" id="hero-tier-filters">
-          <span style="font-size: 11px; color: var(--text-muted);">職業ランク / Class Tier:</span>
-          <button class="filter-btn active" data-val="ALL">全て / All</button>
-          <button class="filter-btn" data-val="1">Tier 1 (下級職 / Basic)</button>
-          <button class="filter-btn" data-val="2">Tier 2 (上級職 / Advanced)</button>
-          <button class="filter-btn" data-val="3">Tier 3 (最上級職 / Master)</button>
-        </div>
-      </div>
-      <div class="grid" id="heroes-grid"></div>
-    </div>
-
-    <!-- Skills Tab Pane -->
-    <div id="tab-skills-pane" class="hidden">
-      <div class="control-panel">
-        <div class="search-box">
-          <input type="text" id="skill-search" placeholder="スキル名や効果説明で検索 / Search skills...">
-        </div>
-        <div class="filter-group" id="skill-element-filters">
-          <span style="font-size: 11px; color: var(--text-muted);">系統 / Type:</span>
-          <button class="filter-btn active" data-val="ALL">全て / All</button>
-          <button class="filter-btn" data-val="fire">🔥 火 / Fire</button>
-          <button class="filter-btn" data-val="water">❄️ 氷 / Ice</button>
-          <button class="filter-btn" data-val="light">✨ 光 / Light</button>
-          <button class="filter-btn" data-val="dark">🔮 闇 / Dark</button>
-          <button class="filter-btn" data-val="physical">⚔️ 物理 / Physical</button>
-        </div>
-      </div>
-      <div class="grid" id="skills-grid"></div>
-    </div>
-  </main>
-
-  <script type="module">
-    import { MONSTERS, SKILLS, CLASSES, getMonsterName, getSkillName, getSkillDesc, getClassName, getClassDesc } from './js/config.js';
-
-    // Bilingual helpers (JP / EN) — global release
-    const bi = (ja, en) => (en && en !== ja) ? `${ja} / ${en}` : (ja || en || '');
-    const biLines = (ja, en) => (en && en !== ja) ? `${ja}<br><span style="color:var(--text-muted);font-size:0.92em;">${en}</span>` : (ja || en || '');
-    const mName = (k) => bi(getMonsterName(k, 'ja'), getMonsterName(k, 'en'));
-    const sName = (k) => bi(getSkillName(k, 'ja'), getSkillName(k, 'en'));
-    const sDesc = (k) => biLines(getSkillDesc(k, 'ja'), getSkillDesc(k, 'en'));
-    const cName = (k) => bi(getClassName(k, 'ja'), getClassName(k, 'en'));
-    const cDesc = (k) => biLines(getClassDesc(k, 'ja'), getClassDesc(k, 'en'));
-    const rangeBi = (r) => ({ '近接': '近接 / Melee', '遠距離': '遠距離 / Ranged', '自身': '自身 / Self' }[r] || r);
-
-    // Rarity definitions (bilingual labels)
-    const RARITIES = {
-      COMMON: { name: 'コモン / Common', color: '#aaaaaa' },
-      UNCOMMON: { name: 'アンコモン / Uncommon', color: '#33cc66' },
-      RARE: { name: 'レア / Rare', color: '#3399ff' },
-      EPIC: { name: 'エピック / Epic', color: '#9933ff' },
-      LEGENDARY: { name: 'レジェンダリー / Legendary', color: '#ff8800' }
+    // ---- 画面の文字(4言語)。ゲームの中の用語に合わせる ----
+    var UI = {
+      ja: { name: '日本語', ttl: '図鑑', ver: 'バージョン {v} のデータです（{d} 作成）', monsters: 'モンスター', classes: '職業', skills: 'スキル', fusion: '合成', gear: '装備・属性',
+        search: '名前で探す', all: 'すべて', rarity: 'レア度', element: '属性', noel: '無属性', kind: '種類', kWild: '野生に出る', kFo: '野生に出ない', kCastle: '城のモンスター', kBoss: '曜日ボス', kSeason: 'シーズン{n}',
+        count: '{n} 件', stats: '能力', sk: 'スキル', world: '初出ワールド', variants: '属性違い', base: '元の種', gimmick: '特性', madeBy: '合成で作る', usedIn: '合成の素材になる',
+        aw: '特殊合成（両方とも覚醒★{n}以上）', ranged: '間接', melee: '近接', medal: '勲章ショップ', far: '遠距離', tier: 'Tier {n}', promo: 'LV {l}・ソウル {c} で「{n}」へ転職', c3: '三職の掛け合わせ',
+        unlock: '解放の条件: 同じヒーローで、次のうち {need} つを Tier 3・LV {level} 以上にする', mp: 'MP', cd: 'クールダウン', sec: '{s} 秒', range: '射程', aoe: '範囲', power: '威力', scaling: '依存',
+        lc: '覚える職業', lm: '覚えるモンスター', rarH: '装備のレア度', mul: '能力の倍率', opts: 'オプションの数', optH: 'オプションの種類', baseSt: '基礎値', relH: '属性の相性（与えるダメージ）',
+        gacha: 'ガチャの確率は、ゲーム内のガチャの画面で確認できます。', note: 'このページは、公開中のバージョンのデータから自動で作っています。', close: '閉じる', empty: '見つかりません', day: '{d}曜', days: ['日', '月', '火', '水', '木', '金', '土'], sys: '{n} 系統' },
+      en: { name: 'English', ttl: 'Encyclopedia', ver: 'Data from version {v} (built {d})', monsters: 'Monsters', classes: 'Classes', skills: 'Skills', fusion: 'Fusion', gear: 'Gear & Elements',
+        search: 'Search by name', all: 'All', rarity: 'Rarity', element: 'Element', noel: 'None', kind: 'Type', kWild: 'Found in the wild', kFo: 'Not in the wild', kCastle: 'Castle monsters', kBoss: 'Weekday Boss', kSeason: 'Season {n}',
+        count: '{n} results', stats: 'Stats', sk: 'Skills', world: 'First appears in World', variants: 'Element variants', base: 'Base', gimmick: 'Trait', madeBy: 'Made by fusion', usedIn: 'Used as fusion material',
+        aw: 'Special fusion (both need Awakening ★{n}+)', ranged: 'Ranged', melee: 'Melee', medal: 'Medal Shop', far: 'Long range', tier: 'Tier {n}', promo: 'Class change to "{n}" at LV {l} for {c} Souls', c3: 'Triple class',
+        unlock: 'Unlock: on the same hero, raise {need} of these to Tier 3, LV {level} or higher', mp: 'MP', cd: 'Cooldown', sec: '{s} s', range: 'Range', aoe: 'Area', power: 'Power', scaling: 'Scales with',
+        lc: 'Classes that learn it', lm: 'Monsters that learn it', rarH: 'Gear rarity', mul: 'Stat multiplier', opts: 'Options', optH: 'Option types', baseSt: 'Base', relH: 'Element matchups (damage dealt)',
+        gacha: 'Gacha rates are shown on the Gacha screen in the game.', note: 'This page is generated automatically from the data of the released version.', close: 'Close', empty: 'No results', day: '{d}', days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], sys: '{n} lines' },
+      zh: { name: '繁體中文', ttl: '圖鑑', ver: '版本 {v} 的資料（{d} 製作）', monsters: '怪物', classes: '職業', skills: '技能', fusion: '合成', gear: '裝備・屬性',
+        search: '以名稱搜尋', all: '全部', rarity: '稀有度', element: '屬性', noel: '無屬性', kind: '類型', kWild: '野外出現', kFo: '野外不出現', kCastle: '城堡的怪物', kBoss: '星期頭目', kSeason: '第{n}季',
+        count: '{n} 筆', stats: '能力', sk: '技能', world: '初次出現的世界', variants: '屬性變體', base: '原種', gimmick: '特性', madeBy: '合成方式', usedIn: '作為合成素材',
+        aw: '特殊合成（雙方皆需覺醒★{n}以上）', ranged: '遠程', melee: '近戰', medal: '勳章商店', far: '遠距離', tier: '{z}階', promo: 'LV {l}・靈魂 {c} 可轉職為「{n}」', c3: '三職組合',
+        unlock: '解鎖條件：同一位英雄將以下其中 {need} 種提升至三階 LV {level} 以上', mp: 'MP', cd: '冷卻', sec: '{s} 秒', range: '射程', aoe: '範圍', power: '威力', scaling: '依存',
+        lc: '習得的職業', lm: '習得的怪物', rarH: '裝備稀有度', mul: '能力倍率', opts: '附加屬性數', optH: '附加屬性種類', baseSt: '基礎值', relH: '屬性相剋（造成的傷害）',
+        gacha: '轉蛋機率可在遊戲內的轉蛋畫面確認。', note: '本頁面由已發布版本的資料自動產生。', close: '關閉', empty: '找不到', day: '星期{d}', days: ['日', '一', '二', '三', '四', '五', '六'], sys: '{n} 個系統' },
+      ko: { name: '한국어', ttl: '도감', ver: '버전 {v} 데이터입니다 ({d} 작성)', monsters: '몬스터', classes: '직업', skills: '스킬', fusion: '합성', gear: '장비·속성',
+        search: '이름으로 검색', all: '전체', rarity: '등급', element: '속성', noel: '무속성', kind: '종류', kWild: '야생 출현', kFo: '야생 미출현', kCastle: '성의 몬스터', kBoss: '요일 보스', kSeason: '시즌 {n}',
+        count: '{n}건', stats: '능력치', sk: '스킬', world: '첫 등장 월드', variants: '속성 변형', base: '기본종', gimmick: '특성', madeBy: '합성으로 획득', usedIn: '합성 재료로 사용',
+        aw: '특수 합성(둘 다 각성 ★{n} 이상)', ranged: '원거리', melee: '근접', medal: '훈장 상점', far: '장거리', tier: 'Tier {n}', promo: 'LV {l}·소울 {c}로 「{n}」 전직', c3: '3직업 조합',
+        unlock: '해방 조건: 같은 영웅으로 다음 중 {need}개를 Tier 3·LV {level} 이상으로 육성', mp: 'MP', cd: '쿨타임', sec: '{s}초', range: '사거리', aoe: '범위', power: '위력', scaling: '의존',
+        lc: '습득 직업', lm: '습득 몬스터', rarH: '장비 등급', mul: '능력 배율', opts: '옵션 수', optH: '옵션 종류', baseSt: '기본값', relH: '속성 상성(주는 피해)',
+        gacha: '뽑기 확률은 게임 내 뽑기 화면에서 확인할 수 있습니다.', note: '이 페이지는 출시된 버전의 데이터로 자동 생성됩니다.', close: '닫기', empty: '결과 없음', day: '{d}요일', days: ['일', '월', '화', '수', '목', '금', '토'], sys: '{n}개 계통' }
     };
+    var LANGS = ['ja', 'en', 'zh', 'ko'], TABS = ['monsters', 'classes', 'skills', 'fusion', 'gear'];
+    var HTMLLANG = { ja: 'ja', en: 'en', zh: 'zh-Hant', ko: 'ko' };
+    var ST5 = ['HP', 'ATK', 'DEF', 'SPD', 'INT'], ST6 = ['HP', 'MP', 'ATK', 'DEF', 'SPD', 'INT'];
+    var SCALE = { str: 'ATK', int: 'INT', spd: 'SPD' };
+    var ELCOL = { fire: '#ff6a3d', water: '#4da6ff', wind: '#4fd8a0', earth: '#d8a640', light: '#ffe680', dark: '#b48cff' };
 
-    // Elements definitions (bilingual labels)
-    const ELEMENTS = {
-      fire: { name: '火 / Fire', color: '#ff3333', icon: '🔥' },
-      water: { name: '水 / Water', color: '#33ccff', icon: '❄️' },
-      wind: { name: '風 / Wind', color: '#33ff55', icon: '⚡' },
-      earth: { name: '地 / Earth', color: '#ffcc66', icon: '⛰️' },
-      light: { name: '光 / Light', color: '#ffff99', icon: '✨' },
-      dark: { name: '闇 / Dark', color: '#cc33ff', icon: '🔮' },
-      physical: { name: '物理/無 / Physical', color: '#aaaaaa', icon: '⚔️' }
-    };
+    // ---- 引くための表 ----
+    var MON = {}, CLS = {}, SKL = {}, RAR = {}, SYS = [], sysMap = {};
+    D.monsters.forEach(function (m) { MON[m.k] = m; });
+    D.skills.forEach(function (s) { SKL[s.k] = s; });
+    D.rarities.forEach(function (r, i) { RAR[r.k] = r; r.i = i; });
+    D.classes.forEach(function (c) { CLS[c.k] = c; if (!sysMap[c.sys]) { sysMap[c.sys] = { sys: c.sys, tiers: [] }; SYS.push(sysMap[c.sys]); } sysMap[c.sys].tiers.push(c); });
+    SYS.forEach(function (s) { s.tiers.sort(function (a, b) { return a.tier - b.tier; }); });
+    var learnC = {}, learnM = {}, madeBy = {}, usedIn = {};
+    D.classes.forEach(function (c) { c.sk.forEach(function (x) { (learnC[x[1]] = learnC[x[1]] || []).push([c.k, x[0]]); }); });
+    D.monsters.forEach(function (m) {
+      var seen = {};
+      m.sk.forEach(function (x) { seen[x[1]] = 1; (learnM[x[1]] = learnM[x[1]] || []).push([m.k, x[0], null]); });
+      (m.v || []).forEach(function (v) { v.sk.forEach(function (x) { if (seen[x[1] + '|' + v.e] || seen[x[1]]) return; seen[x[1] + '|' + v.e] = 1; (learnM[x[1]] = learnM[x[1]] || []).push([m.k, x[0], v.e]); }); });
+    });
+    D.fusion.forEach(function (f) { (madeBy[f.r] = madeBy[f.r] || []).push(f); (usedIn[f.a] = usedIn[f.a] || []).push(f); if (f.b !== f.a) (usedIn[f.b] = usedIn[f.b] || []).push(f); });
 
-    // Helper to get base sprite key
-    function getMonsterSpriteKey(mKey, mon) {
-      let key = mKey.toLowerCase();
-      if (mon && mon.spriteKey) {
-        key = mon.spriteKey.toLowerCase();
+    // ---- 状態 ----
+    var lang = 'ja', tab = 'monsters', L = null, U = UI.ja, open = null;
+    var F = { q: '', rarity: '', element: '', kind: '', scaling: '' };
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function fmt(s, o) { return String(s).replace(/\{(\w+)\}/g, function (_, k) { return o[k] == null ? '' : o[k]; }); }
+    function num(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); }
+    function mName(k) { return (L && L.m[k]) || k; }
+    function sName(k) { return (L && L.s[k] && L.s[k][0]) || k; }
+    function sDesc(k) { return (L && L.s[k] && L.s[k][1]) || ''; }
+    function cName(k) { return (L && L.c[k] && L.c[k][0]) || k; }
+    function cDesc(k) { return (L && L.c[k] && L.c[k][1]) || ''; }
+    function rName(k) { return (L && L.r[k]) || k; }
+    function eName(k) { return k ? ((L && L.e[k]) || k) : U.noel; }
+    function img(t, cls, f) {
+      if (!t) return '<span class="' + (cls || 'th') + '"></span>';
+      var st = (f && (f[0] || f[1] !== 1 || f[2] !== 1)) ? ' style="filter:hue-rotate(' + f[0] + 'deg) saturate(' + f[1] + ') brightness(' + f[2] + ')"' : '';
+      return '<img' + (cls ? ' class="' + cls + '"' : '') + ' src="encyclopedia/thumbs/' + esc(t) + '.png" alt="" loading="lazy" decoding="async"' + st + '>';
+    }
+    function rTag(k) { var r = RAR[k]; return '<span class="tag" style="color:' + (r ? r.color : '#aaa') + ';border-color:' + (r ? r.color : '#555') + '">' + esc(rName(k)) + '</span>'; }
+    function eTag(k) { return '<span class="tag"' + (k ? ' style="color:' + ELCOL[k] + ';border-color:' + ELCOL[k] + '"' : '') + '>' + esc(eName(k)) + '</span>'; }
+    function tag(s) { return '<span class="tag">' + esc(s) + '</span>'; }
+    function monFlags(m) {
+      var a = [];
+      if (m.eb) a.push(tag(U.kBoss + (m.day != null ? '（' + fmt(U.day, { d: U.days[m.day] }) + '）' : '')));
+      if (m.co) a.push(tag(U.kCastle));
+      if (m.fo && !m.eb) a.push(tag(U.kFo));
+      if (m.ms) a.push(tag(U.medal));
+      if (m.se) a.push(tag(fmt(U.kSeason, { n: m.se })));
+      if (m.rg) a.push(tag(U.far));
+      return a.join('');
+    }
+
+    // ---- 言語 ----
+    function setLang(l, cb) {
+      if (LANGS.indexOf(l) < 0) l = 'en';
+      var done = function () { lang = l; U = UI[l]; L = window.PR_WIKI_I18N[l]; document.documentElement.lang = HTMLLANG[l]; try { localStorage.setItem('pr_wiki_lang', l); } catch (e) {} cb && cb(); };
+      if (window.PR_WIKI_I18N && window.PR_WIKI_I18N[l]) return done();
+      var s = document.createElement('script'); s.src = 'encyclopedia/i18n.' + l + '.js'; s.onload = done;
+      s.onerror = function () { $('list').textContent = 'Language data could not be loaded.'; };
+      document.head.appendChild(s);
+    }
+    function pickLang() {
+      try { var s = localStorage.getItem('pr_wiki_lang'); if (s && LANGS.indexOf(s) >= 0) return s; } catch (e) {}
+      var n = (navigator.language || 'en').toLowerCase();
+      return n.indexOf('ja') === 0 ? 'ja' : n.indexOf('ko') === 0 ? 'ko' : n.indexOf('zh') === 0 ? 'zh' : 'en';
+    }
+
+    // ---- 枠(見出し・タブ・絞り込み) ----
+    function chrome() {
+      $('ttl').textContent = U.ttl;
+      document.title = 'Pocket Rumble ' + U.ttl;
+      $('ver').textContent = fmt(U.ver, { v: D.meta.version, d: D.meta.date });
+      $('langs').innerHTML = LANGS.map(function (l) { return '<button type="button" data-lang="' + l + '" aria-pressed="' + (l === lang) + '">' + esc(UI[l].name) + '</button>'; }).join('');
+      $('tabs').innerHTML = TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t + '" aria-selected="' + (t === tab) + '">' + esc(U[t]) + '</button>'; }).join('');
+      $('mclose').textContent = U.close;
+      $('foot').innerHTML = '<p>' + esc(U.gacha) + '</p><p>' + esc(U.note) + ' ' + esc(fmt(U.ver, { v: D.meta.version, d: D.meta.date })) + '</p>';
+      controls();
+    }
+    function sel(id, label, opts, val) {
+      return '<select id="' + id + '" aria-label="' + esc(label) + '"><option value="">' + esc(label + ': ' + U.all) + '</option>' + opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
+    }
+    function controls() {
+      var h = '';
+      if (tab !== 'gear') h += '<input id="q" type="search" placeholder="' + esc(U.search) + '" value="' + esc(F.q) + '" autocomplete="off">';
+      var els = D.elements.map(function (e) { return [e, eName(e)]; });
+      if (tab === 'monsters') {
+        var used = {}; D.monsters.forEach(function (m) { used[m.r] = 1; });
+        h += sel('f-rarity', U.rarity, D.rarities.filter(function (r) { return used[r.k]; }).map(function (r) { return [r.k, rName(r.k)]; }), F.rarity);
+        h += sel('f-element', U.element, els.concat([['none', U.noel]]), F.element);
+        var seasons = {}; D.monsters.forEach(function (m) { if (m.se) seasons[m.se] = 1; });
+        h += sel('f-kind', U.kind, [['wild', U.kWild], ['fo', U.kFo], ['castle', U.kCastle], ['boss', U.kBoss]].concat(Object.keys(seasons).map(function (n) { return ['s' + n, fmt(U.kSeason, { n: n })]; })), F.kind);
+      } else if (tab === 'skills') {
+        h += sel('f-element', U.element, els.concat([['none', U.noel]]), F.element);
+        h += sel('f-scaling', U.scaling, Object.keys(SCALE).map(function (k) { return [k, SCALE[k]]; }), F.scaling);
+      } else if (tab === 'classes') {
+        h += sel('f-kind', U.kind, [['melee', U.melee], ['ranged', U.ranged], ['c3', U.c3]], F.kind);
       }
-      if (key === 'rat') key = 'flame_rat';
-      return key;
+      $('controls').innerHTML = h;
     }
+    function qmatch(s) { return !F.q || String(s).toLowerCase().indexOf(F.q.toLowerCase()) >= 0; }
 
-    // Helper to estimate progress bars
-    const maxStats = { hp: 1200, atk: 60, def: 40, spd: 40, int: 50 };
-
-    // DOM Setup
-    const monstersGrid = document.getElementById('monsters-grid');
-    const skillsGrid = document.getElementById('skills-grid');
-
-    // Counters
-    document.getElementById('monsters-count').innerText = Object.keys(MONSTERS).length;
-    document.getElementById('skills-count').innerText = Object.keys(SKILLS).length;
-    document.getElementById('heroes-count').innerText = Object.keys(CLASSES).length;
-
-    // Tabs switching
-    const tabMonstersBtn = document.getElementById('tab-monsters-btn');
-    const tabSkillsBtn = document.getElementById('tab-skills-btn');
-    const tabHeroesBtn = document.getElementById('tab-heroes-btn');
-    const tabMonstersPane = document.getElementById('tab-monsters-pane');
-    const tabSkillsPane = document.getElementById('tab-skills-pane');
-    const tabHeroesPane = document.getElementById('tab-heroes-pane');
-
-    tabMonstersBtn.onclick = () => {
-      tabMonstersBtn.classList.add('active');
-      tabSkillsBtn.classList.remove('active');
-      tabHeroesBtn.classList.remove('active');
-      tabMonstersPane.classList.remove('hidden');
-      tabSkillsPane.classList.add('hidden');
-      tabHeroesPane.classList.add('hidden');
-    };
-
-    tabSkillsBtn.onclick = () => {
-      tabSkillsBtn.classList.add('active');
-      tabMonstersBtn.classList.remove('active');
-      tabHeroesBtn.classList.remove('active');
-      tabSkillsPane.classList.remove('hidden');
-      tabMonstersPane.classList.add('hidden');
-      tabHeroesPane.classList.add('hidden');
-    };
-
-    tabHeroesBtn.onclick = () => {
-      tabHeroesBtn.classList.add('active');
-      tabMonstersBtn.classList.remove('active');
-      tabSkillsBtn.classList.remove('active');
-      tabHeroesPane.classList.remove('hidden');
-      tabMonstersPane.classList.add('hidden');
-      tabSkillsPane.classList.add('hidden');
-    };
-
-    // Render Monsters
-    const statsTbody = document.getElementById('monster-stats-tbody');
-    function renderMonsters() {
-      monstersGrid.innerHTML = '';
-      if (statsTbody) statsTbody.innerHTML = '';
-      const nameFilter = document.getElementById('monster-search').value.toLowerCase();
-      const rarityFilter = document.querySelector('#monster-rarity-filters .active').dataset.val;
-      const elementFilter = document.querySelector('#monster-element-filters .active').dataset.val;
-
-      for (const [key, mon] of Object.entries(MONSTERS)) {
-        const spriteKey = getMonsterSpriteKey(key, mon);
-        const name = mon.name;
-        const rarity = mon.rarity || 'COMMON';
-        const element = mon.element || 'physical';
-        
-        // Search filter
-        if (nameFilter && !name.toLowerCase().includes(nameFilter) && !element.toLowerCase().includes(nameFilter)) {
-          continue;
-        }
-
-        // Rarity filter
-        if (rarityFilter !== 'ALL' && rarity !== rarityFilter) {
-          continue;
-        }
-
-        // Element filter
-        if (elementFilter !== 'ALL' && element !== elementFilter) {
-          continue;
-        }
-
-        const rarityInfo = RARITIES[rarity];
-        const elementInfo = ELEMENTS[element] || ELEMENTS.physical;
-
-        // Add row to stats summary table
-        if (statsTbody) {
-          const row = document.createElement('tr');
-          row.style.borderBottom = '1px solid rgba(136, 51, 204, 0.15)';
-          row.innerHTML = `
-            <td style="padding: 6px 4px;">
-              <a href="#monster-card-${key}" style="color: var(--cyan); text-decoration: none; font-weight: bold;">
-                ${mName(key)}
-              </a>
-            </td>
-            <td style="padding: 6px 4px; color: ${rarityInfo.color}; font-weight: bold; font-size: 11px;">${rarityInfo.name}</td>
-            <td style="padding: 6px 4px; color: ${elementInfo.color}; font-weight: bold; font-size: 11px;">${elementInfo.icon} ${elementInfo.name}</td>
-            <td style="padding: 6px 4px; text-align: right; font-weight: bold; color: #fff;">${mon.hp}</td>
-            <td style="padding: 6px 4px; text-align: right; color: #ffaa33;">${mon.atk}</td>
-            <td style="padding: 6px 4px; text-align: right; color: #33aaff;">${mon.def}</td>
-            <td style="padding: 6px 4px; text-align: right; color: #33ffaa;">${mon.spd}</td>
-            <td style="padding: 6px 4px; text-align: right; color: #cc55ff;">${mon.int}</td>
-          `;
-          statsTbody.appendChild(row);
-        }
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.id = `monster-card-${key}`;
-        card.style.borderColor = elementInfo.color + '44';
-
-        // Filter styles
-        let filterStyle = '';
-        if (mon.hueShift !== undefined) {
-          const h = mon.hueShift;
-          const s = mon.saturate !== undefined ? mon.saturate : 1.0;
-          const b = mon.brightness !== undefined ? mon.brightness : 1.0;
-          filterStyle = `style="filter: hue-rotate(${h}deg) saturate(${s}) brightness(${b});"`;
-        }
-
-        // Skill list HTML
-        let skillsHTML = '';
-        if (mon.skillTree && mon.skillTree.length > 0) {
-          skillsHTML = mon.skillTree.map(skNode => {
-            const sk = SKILLS[skNode.skill];
-            return `<div class="skill-link">
-                      <span>LV${skNode.level}</span>
-                      <strong style="color: ${sk?.color || '#fff'};">${sName(skNode.skill)}</strong>
-                    </div>`;
-          }).join('');
-        }
-
-        card.innerHTML = `
-          <div class="rarity-badge" style="background: ${rarityInfo.color}; color: #000;">${rarityInfo.name}</div>
-          <div class="card-header">
-            <div class="monster-avatar-frame" style="border-color: ${elementInfo.color}88;">
-              <img class="monster-avatar" src="sprites/monsters/${spriteKey}.png" ${filterStyle} onerror="this.src='sprites/frames2/${spriteKey}/walk/f01.png'; this.onerror=null;">
-            </div>
-            <div class="monster-name-area">
-              <span class="monster-title">${mName(key)}</span>
-              <span class="element-badge" style="background: ${elementInfo.color}22; color: ${elementInfo.color}; border: 1px solid ${elementInfo.color}44;">
-                ${elementInfo.icon} ${elementInfo.name}
-              </span>
-            </div>
-          </div>
-          <div>
-            <table class="stats-table">
-              <tr>
-                <td>HP:</td>
-                <td>${mon.hp}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.hp / maxStats.hp) * 100)}%; background: #ff5566;"></div></div></td>
-              </tr>
-              <tr>
-                <td>物理攻撃力 (ATK):</td>
-                <td>${mon.atk}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.atk / maxStats.atk) * 100)}%; background: #ffaa33;"></div></div></td>
-              </tr>
-              <tr>
-                <td>物理防御力 (DEF):</td>
-                <td>${mon.def}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.def / maxStats.def) * 100)}%; background: #33aaff;"></div></div></td>
-              </tr>
-              <tr>
-                <td>素早さ (SPD):</td>
-                <td>${mon.spd}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.spd / maxStats.spd) * 100)}%; background: #33ffaa;"></div></div></td>
-              </tr>
-              <tr>
-                <td>魔法威力 (INT):</td>
-                <td>${mon.int}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (mon.int / maxStats.int) * 100)}%; background: #cc55ff;"></div></div></td>
-              </tr>
-            </table>
-          </div>
-          <div class="skills-area">
-            <span class="skills-title">習得スキル / Skills</span>
-            ${skillsHTML || '<div style="font-size: 11px; color: var(--text-muted);">なし / None</div>'}
-          </div>
-        `;
-        monstersGrid.appendChild(card);
+    // ---- 一覧 ----
+    function render() {
+      var h = '', n = null;
+      if (tab === 'monsters') {
+        var ms = D.monsters.filter(function (m) {
+          if (!qmatch(mName(m.k))) return false;
+          if (F.rarity && m.r !== F.rarity) return false;
+          if (F.element && (F.element === 'none' ? !!m.e : m.e !== F.element)) return false;
+          if (F.kind === 'wild' && m.w == null) return false;
+          if (F.kind === 'fo' && !m.fo) return false;
+          if (F.kind === 'castle' && !m.co) return false;
+          if (F.kind === 'boss' && !m.eb) return false;
+          if (F.kind.charAt(0) === 's' && String(m.se) !== F.kind.slice(1)) return false;
+          return true;
+        });
+        n = ms.length;
+        h = '<div class="grid">' + ms.map(function (m) { return '<button type="button" class="card" data-open="m:' + m.k + '">' + img(m.t) + '<span class="nm">' + esc(mName(m.k)) + '</span><span class="tags">' + rTag(m.r) + eTag(m.e) + '</span></button>'; }).join('') + '</div>';
+      } else if (tab === 'classes') {
+        var ss = SYS.filter(function (s) {
+          if (!s.tiers.some(function (c) { return qmatch(cName(c.k)); })) return false;
+          if (F.kind === 'c3' && !s.tiers[0].c3) return false;
+          if ((F.kind === 'melee' || F.kind === 'ranged') && s.tiers[0].rt !== F.kind) return false;
+          return true;
+        });
+        n = ss.length;
+        h = '<div class="sysgrid">' + ss.map(function (s) {
+          return '<button type="button" class="sys" data-open="c:' + s.sys + '"><span class="pics">' + s.tiers.map(function (c) { return img(c.t); }).join('') + '</span><span><span class="nm">' + s.tiers.map(function (c) { return esc(cName(c.k)); }).join(' → ') + '</span><br><span class="tags" style="justify-content:flex-start">' + tag(U[s.tiers[0].rt]) + (s.tiers[0].c3 ? tag(U.c3) : '') + '</span></span></button>';
+        }).join('') + '</div>';
+      } else if (tab === 'skills') {
+        var sk = D.skills.filter(function (s) {
+          if (!qmatch(sName(s.k)) && !qmatch(sDesc(s.k))) return false;
+          if (F.element && (F.element === 'none' ? !!s.el : s.el !== F.element)) return false;
+          if (F.scaling && s.sc !== F.scaling) return false;
+          return true;
+        }).sort(function (a, b) { return sName(a.k).localeCompare(sName(b.k), HTMLLANG[lang]); });
+        n = sk.length;
+        h = '<div class="rows">' + sk.map(function (s) { return '<button type="button" class="row" data-open="s:' + s.k + '"><span class="nm">' + esc(sName(s.k)) + '</span>' + eTag(s.el) + '<span class="sub">' + U.mp + ' ' + num(s.mp) + ' ・ ' + esc(U.power) + ' ' + num(s.pw) + ' ・ ' + esc(SCALE[s.sc] || s.sc) + '</span></button>'; }).join('') + '</div>';
+      } else if (tab === 'fusion') {
+        var fs = D.fusion.filter(function (f) { return qmatch(mName(f.a)) || qmatch(mName(f.b)) || qmatch(mName(f.r)); });
+        n = fs.length;
+        h = '<div class="rows">' + fs.map(function (f) { return '<div class="row static">' + fusRow(f) + '</div>'; }).join('') + '</div>';
+      } else {
+        h = gearHtml();
       }
+      $('count').textContent = n == null ? '' : fmt(U.count, { n: n });
+      $('list').innerHTML = (n === 0) ? '<p class="empty">' + esc(U.empty) + '</p>' : h;
+    }
+    function monBtn(k) { var m = MON[k]; return '<button type="button" class="mon" data-open="m:' + k + '">' + img(m && m.t) + esc(mName(k)) + '</button>'; }
+    function fusRow(f) { return '<span class="fus">' + monBtn(f.a) + '<span class="op">+</span>' + monBtn(f.b) + '<span class="op">→</span>' + monBtn(f.r) + (f.aw ? tag(fmt(U.aw, { n: f.aw })) : '') + '</span>'; }
+    function statTable(heads, rows) {
+      return '<div class="scroll"><table><thead><tr><th></th>' + heads.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td>' + r[1].map(function (v) { return '<td>' + v + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+    }
+    function skillList(sk) {
+      return '<div class="sk">' + sk.map(function (x) { return '<button type="button" data-open="s:' + x[1] + '"><span class="lv">LV ' + x[0] + '</span><span>' + esc(sName(x[1])) + '<span class="d">' + esc(sDesc(x[1])) + '</span></span></button>'; }).join('') + '</div>';
+    }
+    function gearHtml() {
+      var h = '<section class="block"><h2>' + esc(U.rarH) + '</h2>' + statTable([U.mul, U.opts], D.rarities.map(function (r) { return ['<span style="color:' + r.color + '">' + esc(rName(r.k)) + '</span>', ['×' + num(r.mul), r.opts]]; })) + '</section>';
+      if (D.optKinds.length) h += '<section class="block"><h2>' + esc(U.optH) + '</h2><div class="tags" style="justify-content:flex-start">' + D.optKinds.map(function (o) { return tag((L && L.o[o.k]) || o.k); }).join('') + '</div></section>';
+      h += '<section class="block"><h2>' + esc(U.relH) + '</h2><div class="rows">' + D.elements.map(function (a) {
+        var r = D.elemRel[a] || {};
+        return '<div class="row static">' + eTag(a) + '<span class="sub">→</span>' + Object.keys(r).map(function (b) { return eTag(b) + '<span class="sub">×' + num(r[b]) + '</span>'; }).join('') + '</div>';
+      }).join('') + '</div></section>';
+      return h;
     }
 
-    // Helper to get hero base sprite folder name from classKey
-    function getHeroSpriteKey(classKey) {
-      return classKey.toLowerCase();
+    // ---- くわしい表示 ----
+    var vSel = null;
+    function detail(kind, key) {
+      var h = '';
+      if (kind === 'm') {
+        var m = MON[key]; if (!m) return false;
+        var v = null; if (vSel && m.v) m.v.forEach(function (x) { if (x.e === vSel) v = x; });
+        var cur = v || m;
+        h += '<div class="head">' + img(m.t, '', v && v.f) + '<div><h2>' + esc(mName(key)) + '</h2><div class="tags">' + rTag(m.r) + eTag(v ? v.e : m.e) + monFlags(m) + '</div></div></div>';
+        if (m.w != null) h += '<p class="note">' + esc(U.world) + ': ' + m.w + '</p>';
+        if (m.gm && L.g[key]) h += '<h3>' + esc(U.gimmick) + '</h3><p class="desc">' + esc(L.g[key]) + '</p>';
+        if (m.v && m.v.length) h += '<h3>' + esc(U.variants) + '</h3><div class="chips"><button type="button" data-v="" aria-pressed="' + (!v) + '">' + esc(U.base) + '（' + esc(eName(m.e)) + '）</button>' + m.v.map(function (x) { return '<button type="button" data-v="' + x.e + '" aria-pressed="' + (v === x) + '">' + esc(eName(x.e)) + '</button>'; }).join('') + '</div>';
+        h += '<h3>' + esc(U.stats) + '</h3>' + statTable(ST5, [[esc(U.baseSt), cur.st.map(num)]]);
+        h += '<h3>' + esc(U.sk) + '</h3>' + skillList(cur.sk);
+        if (madeBy[key]) h += '<h3>' + esc(U.madeBy) + '</h3><div class="rows">' + madeBy[key].map(function (f) { return '<div class="row static">' + fusRow(f) + '</div>'; }).join('') + '</div>';
+        if (usedIn[key]) h += '<h3>' + esc(U.usedIn) + '</h3><div class="rows">' + usedIn[key].map(function (f) { return '<div class="row static">' + fusRow(f) + '</div>'; }).join('') + '</div>';
+      } else if (kind === 'c') {
+        var s = sysMap[key] || (CLS[key] && sysMap[CLS[key].sys]); if (!s) return false;
+        h += '<h2>' + s.tiers.map(function (c) { return esc(cName(c.k)); }).join(' → ') + '</h2><div class="tags" style="justify-content:flex-start">' + tag(U[s.tiers[0].rt]) + (s.tiers[0].c3 ? tag(U.c3) : '') + '</div>';
+        var u = D.c3[s.sys];
+        if (u && u.of.length) h += '<p class="desc">' + esc(fmt(U.unlock, u)) + '</p><div class="links">' + u.of.map(function (x) { return '<button type="button" data-open="c:' + x + '">' + esc(cName(x + '_3')) + '</button>'; }).join('') + '</div>';
+        h += statTable(ST6, s.tiers.map(function (c) { return [esc(fmt(U.tier, { n: c.tier, z: ['一', '二', '三'][c.tier - 1] || c.tier })) + ' ' + esc(cName(c.k)), c.st.map(num)]; }));
+        s.tiers.forEach(function (c) {
+          h += '<div class="tier"><div class="head">' + img(c.t) + '<div><h3 style="margin:0">' + esc(fmt(U.tier, { n: c.tier, z: ['一', '二', '三'][c.tier - 1] || c.tier })) + '</h3><strong>' + esc(cName(c.k)) + '</strong></div></div><p class="desc">' + esc(cDesc(c.k)) + '</p>' + skillList(c.sk);
+          if (c.pn) h += '<p class="note">' + esc(fmt(U.promo, { l: c.pl, c: num(c.pc), n: cName(c.pn) })) + '</p>';
+          h += '</div>';
+        });
+      } else if (kind === 's') {
+        var k = SKL[key]; if (!k) return false;
+        h += '<h2>' + esc(sName(key)) + '</h2><div class="tags" style="justify-content:flex-start">' + eTag(k.el) + tag(U.scaling + ': ' + (SCALE[k.sc] || k.sc)) + '</div><p class="desc">' + esc(sDesc(key)) + '</p>';
+        h += statTable([U.mp, U.cd, U.range, U.aoe, U.power], [['', [num(k.mp), esc(fmt(U.sec, { s: num(k.cd / 1000) })), num(k.rg), num(k.aoe), '×' + num(k.pw)]]]);
+        if (learnC[key]) h += '<h3>' + esc(U.lc) + '</h3><div class="links">' + learnC[key].map(function (x) { return '<button type="button" data-open="c:' + CLS[x[0]].sys + '">' + esc(cName(x[0])) + ' <span class="note">LV ' + x[1] + '</span></button>'; }).join('') + '</div>';
+        if (learnM[key]) h += '<h3>' + esc(U.lm) + '</h3><div class="links">' + learnM[key].map(function (x) { return '<button type="button" data-open="m:' + x[0] + (x[2] ? ':' + x[2] : '') + '">' + esc(mName(x[0])) + (x[2] ? '（' + esc(eName(x[2])) + '）' : '') + ' <span class="note">LV ' + x[1] + '</span></button>'; }).join('') + '</div>';
+      } else return false;
+      $('detail').innerHTML = h;
+      return true;
     }
-
-    const maxHeroStats = { hp: 1200, mp: 200, atk: 150, def: 100, spd: 50, int: 100 };
-
-    // Render Heroes
-    function renderHeroes() {
-      const heroesGrid = document.getElementById('heroes-grid');
-      heroesGrid.innerHTML = '';
-      const searchFilter = document.getElementById('hero-search').value.toLowerCase();
-      const tierFilter = document.querySelector('#hero-tier-filters .active').dataset.val;
-
-      for (const [key, cls] of Object.entries(CLASSES)) {
-        const name = cls.name;
-        const tier = cls.tier || 1;
-        const range = cls.rangeType || '近接';
-        const desc = cls.description || '';
-        
-        // Search Filter
-        if (searchFilter && !name.toLowerCase().includes(searchFilter) && !desc.toLowerCase().includes(searchFilter) && !range.toLowerCase().includes(searchFilter)) {
-          continue;
-        }
-
-        // Tier Filter
-        if (tierFilter !== 'ALL' && tier.toString() !== tierFilter) {
-          continue;
-        }
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.borderColor = cls.color + '44';
-
-        const spriteKey = getHeroSpriteKey(key);
-
-        // Skill list HTML for this class
-        let skillsHTML = '';
-        if (cls.skillTree && cls.skillTree.length > 0) {
-          skillsHTML = cls.skillTree.map(skNode => {
-            const sk = SKILLS[skNode.skill];
-            return `<div class="skill-link">
-                      <span>LV${skNode.level}</span>
-                      <strong style="color: ${sk?.color || '#fff'};">${sName(skNode.skill)}</strong>
-                    </div>`;
-          }).join('');
-        }
-
-        // Promotion details
-        let promoHTML = '';
-        if (cls.promotion) {
-          const nextName = cName(cls.promotion.next);
-          promoHTML = `<div style="font-size: 11px; background: rgba(0, 255, 255, 0.1); border: 1px solid rgba(0, 255, 255, 0.3); padding: 6px; border-radius: 4px; color: #00ffff; margin-top: 10px;">
-                         <strong>転職 / Promotion:</strong> LV${cls.promotion.level} で <strong>${nextName}</strong> へ昇格可 (費用: 👻${cls.promotion.cost} ソウル / Cost: ${cls.promotion.cost} Souls)
-                       </div>`;
-        } else {
-          promoHTML = `<div style="font-size: 11px; background: rgba(255, 255, 255, 0.05); border: 1px dashed rgba(255, 255, 255, 0.2); padding: 6px; border-radius: 4px; color: var(--text-muted); margin-top: 10px; text-align: center;">
-                         最高ランク (転職上限) / Max rank
-                       </div>`;
-        }
-
-        card.innerHTML = `
-          <div class="rarity-badge" style="background: ${cls.color || '#fff'}; color: #000; font-weight: bold;">Tier ${tier}</div>
-          <div class="card-header">
-            <div class="monster-avatar-frame" style="border-color: ${cls.color}88;">
-              <img class="monster-avatar" src="sprites/frames2/${spriteKey}/walk/f01.png" onerror="this.src='sprites/monsters/warrior_1.png'; this.onerror=null;">
-            </div>
-            <div class="monster-name-area">
-              <span class="monster-title" style="color: ${cls.color || '#fff'};">${cName(key)}</span>
-              <span class="element-badge" style="background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2);">
-                ${rangeBi(range)}
-              </span>
-            </div>
-          </div>
-          <div style="font-size: 11px; color: var(--text-muted); min-height: 35px; line-height: 1.4; margin-bottom: 8px;">
-            ${cDesc(key)}
-          </div>
-          <div>
-            <table class="stats-table">
-              <tr>
-                <td>基本HP:</td>
-                <td>${cls.baseHP}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseHP / maxHeroStats.hp) * 100)}%; background: #ff5566;"></div></div></td>
-              </tr>
-              <tr>
-                <td>基本MP:</td>
-                <td>${cls.baseMP}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseMP / maxHeroStats.mp) * 100)}%; background: #0088ff;"></div></div></td>
-              </tr>
-              <tr>
-                <td>基本攻撃力 (ATK):</td>
-                <td>${cls.baseATK}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseATK / maxHeroStats.atk) * 100)}%; background: #ffaa33;"></div></div></td>
-              </tr>
-              <tr>
-                <td>基本防御力 (DEF):</td>
-                <td>${cls.baseDEF}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseDEF / maxHeroStats.def) * 100)}%; background: #33aaff;"></div></div></td>
-              </tr>
-              <tr>
-                <td>素早さ (SPD):</td>
-                <td>${cls.baseSPD}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseSPD / maxHeroStats.spd) * 100)}%; background: #33ffaa;"></div></div></td>
-              </tr>
-              <tr>
-                <td>魔法威力 (INT):</td>
-                <td>${cls.baseINT}</td>
-              </tr>
-              <tr>
-                <td colspan="2"><div class="stat-bar-container"><div class="stat-bar" style="width: ${Math.min(100, (cls.baseINT / maxHeroStats.int) * 100)}%; background: #cc55ff;"></div></div></td>
-              </tr>
-            </table>
-          </div>
-          <div class="skills-area">
-            <span class="skills-title">習得スキル / Skills</span>
-            ${skillsHTML || '<div style="font-size: 11px; color: var(--text-muted);">なし / None</div>'}
-          </div>
-          ${promoHTML}
-        `;
-        heroesGrid.appendChild(card);
-      }
+    function show(spec, push) {
+      var p = String(spec).split(':'), kind = p[0], key = p[1];
+      vSel = (kind === 'm' && p[2]) ? p[2] : null;
+      if (!detail(kind, key)) return;
+      open = kind + ':' + key;
+      $('modal').hidden = false; document.body.style.overflow = 'hidden';
+      $('modal').querySelector('.sheet').scrollTop = 0;
+      if (push !== false) setHash();
     }
+    function hide(push) { if (!open) return; open = null; vSel = null; $('modal').hidden = true; document.body.style.overflow = ''; if (push !== false) setHash(); }
 
-    // Render Skills
-    function renderSkills() {
-      skillsGrid.innerHTML = '';
-      const searchFilter = document.getElementById('skill-search').value.toLowerCase();
-      const elementFilter = document.querySelector('#skill-element-filters .active').dataset.val;
+    // ---- アドレスの # に、言語・タブ・開いている項目を入れる(その項目へのリンクを渡せる) ----
+    var hashing = false;
+    function setHash() { hashing = true; var h = '#' + lang + '/' + tab + (open ? '/' + open + (vSel ? ':' + vSel : '') : ''); try { history.replaceState(null, '', h); } catch (e) { location.hash = h; } hashing = false; }
+    function readHash() { var p = decodeURIComponent(location.hash.replace(/^#/, '')).split('/'); return { lang: LANGS.indexOf(p[0]) >= 0 ? p[0] : null, tab: TABS.indexOf(p[1]) >= 0 ? p[1] : null, open: p[2] || null }; }
+    function go(l, t, o) { setLang(l, function () { tab = t || tab; chrome(); render(); if (o) show(o, false); else hide(false); setHash(); }); }
 
-      for (const [key, sk] of Object.entries(SKILLS)) {
-        const name = sk.name || key;
-        const desc = sk.description || '';
-        const et = sk.effectType || '';
-        
-        // Resolve system element of skill
-        let element = 'physical';
-        if (et.includes('fire') || et.includes('flame') || desc.includes('火') || desc.includes('炎')) {
-          element = 'fire';
-        } else if (et.includes('ice') || et.includes('blizzard') || desc.includes('氷') || desc.includes('凍')) {
-          element = 'water';
-        } else if (et.includes('holy') || et.includes('divine') || et.includes('heal') || et.includes('revive') || et.includes('cleanse')) {
-          element = 'light';
-        } else if (et.includes('dark') || et.includes('apocalypse') || et.includes('blood') || et.includes('poison')) {
-          element = 'dark';
-        }
+    // ---- 操作 ----
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button') : null;
+      if (e.target === $('modal')) return hide();
+      if (!b) return;
+      if (b.id === 'mclose') return hide();
+      if (b.dataset.lang) return go(b.dataset.lang, tab, open ? open + (vSel ? ':' + vSel : '') : null);
+      if (b.dataset.tab) { tab = b.dataset.tab; F.q = ''; F.kind = ''; chrome(); render(); setHash(); window.scrollTo(0, 0); return; }
+      if (b.dataset.open) return show(b.dataset.open);
+      if (b.dataset.v != null && open) { vSel = b.dataset.v || null; var keep = $('modal').querySelector('.sheet').scrollTop; detail('m', open.split(':')[1]); $('modal').querySelector('.sheet').scrollTop = keep; setHash(); }
+    });
+    document.addEventListener('input', function (e) { if (e.target.id === 'q') { F.q = e.target.value; render(); } });
+    document.addEventListener('change', function (e) {
+      var id = e.target.id;
+      if (id === 'f-rarity') F.rarity = e.target.value; else if (id === 'f-element') F.element = e.target.value; else if (id === 'f-kind') F.kind = e.target.value; else if (id === 'f-scaling') F.scaling = e.target.value; else return;
+      render();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+    window.addEventListener('hashchange', function () { if (hashing) return; var h = readHash(); go(h.lang || lang, h.tab || tab, h.open); });
 
-        // Search Filter
-        if (searchFilter && !name.toLowerCase().includes(searchFilter) && !desc.toLowerCase().includes(searchFilter)) {
-          continue;
-        }
-
-        // Element/System Filter
-        if (elementFilter !== 'ALL' && element !== elementFilter) {
-          continue;
-        }
-
-        const elInfo = ELEMENTS[element];
-
-        const card = document.createElement('div');
-        card.className = 'skill-card';
-        card.style.borderLeft = `4px solid ${sk.color || elInfo.color || '#fff'}`;
-
-        const cooldownSec = (sk.cooldown / 1000).toFixed(1);
-        let rangeText = sk.range > 0 ? (sk.range <= 60 ? '近接 / Melee' : '遠距離 / Ranged') : '自身 / Self';
-
-        card.innerHTML = `
-          <div class="skill-header">
-            <span class="skill-name" style="color: ${sk.color || '#fff'};">${sName(key)}</span>
-            <span style="font-size: 10px; background: ${elInfo.color}33; color: ${elInfo.color}; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
-              ${elInfo.icon} ${elInfo.name}
-            </span>
-          </div>
-          <div class="skill-meta">
-            <span>消耗MP / MP: <strong style="color: var(--cyan);">${sk.mpCost}</strong></span>
-            <span>リキャスト / CT: <strong>${cooldownSec}s</strong></span>
-            <span>射程 / Range: <strong>${rangeText}</strong></span>
-          </div>
-          <div class="skill-desc">${sDesc(key)}</div>
-        `;
-        skillsGrid.appendChild(card);
-      }
-    }
-
-    // Set Filter Events
-    function setupFilters() {
-      // Monster filters
-      document.getElementById('monster-search').addEventListener('input', renderMonsters);
-      
-      document.querySelectorAll('#monster-rarity-filters .filter-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('#monster-rarity-filters .filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderMonsters();
-        };
-      });
-
-      document.querySelectorAll('#monster-element-filters .filter-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('#monster-element-filters .filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderMonsters();
-        };
-      });
-
-      // Skill filters
-      document.getElementById('skill-search').addEventListener('input', renderSkills);
-
-      document.querySelectorAll('#skill-element-filters .filter-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('#skill-element-filters .filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderSkills();
-        };
-      });
-
-      // Hero filters
-      document.getElementById('hero-search').addEventListener('input', renderHeroes);
-
-      document.querySelectorAll('#hero-tier-filters .filter-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('#hero-tier-filters .filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          renderHeroes();
-        };
-      });
-    }
-
-    // Initial render
-    setupFilters();
-    renderMonsters();
-    renderSkills();
-    renderHeroes();
+    var h0 = readHash();
+    go(h0.lang || pickLang(), h0.tab || 'monsters', h0.open);
+  })();
   </script>
 </body>
 </html>
